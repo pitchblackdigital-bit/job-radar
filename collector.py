@@ -16,6 +16,12 @@ HEADERS = {'User-Agent': 'JobRadar/1.0 (public ATS feed; low-frequency personal 
 ROLE = re.compile(r'\b(ux|ui|user experience|user interface|product design(?:er)?|wordpress|web design(?:er)?|website design(?:er)?|design systems?|visual design(?:er)?|brand(?:ing)? design(?:er)?|creative director|art director|design director|design lead|design manager|design strategist|digital experience design(?:er)?|content design(?:er)?|experience design(?:er)?|interaction design(?:er)?|ux research(?:er)?|marketing design(?:er)?)\b', re.I)
 EXCLUDE = re.compile(r'\b(intern(?:ship)?|trainee(?:ship)?|volunteer|unpaid|early career|new grad|graduate program)\b', re.I)
 
+CANADA = re.compile(r'\b(?:canada|canadian|toronto|ontario|ottawa|montreal|montréal|quebec|québec|vancouver|british columbia|calgary|edmonton|alberta|winnipeg|manitoba|halifax|nova scotia|new brunswick|saskatchewan|newfoundland|prince edward island|victoria|waterloo|kitchener|mississauga|brampton|scarborough|north york|markham|richmond hill|oakville|burlington|hamilton|london,? on|remote,? ca|remote - canada)\b', re.I)
+
+def canada_eligible(location):
+    """Conservative geographic signal, not proof of work authorization."""
+    return bool(CANADA.search(location or ''))
+
 def is_relevant(title):
     return bool(ROLE.search(title or '')) and not EXCLUDE.search(title or '')
 
