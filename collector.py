@@ -13,8 +13,8 @@ OUTPUT = ROOT / 'jobs.json'
 CONFIG = ROOT / 'sources.json'
 TIMEOUT = 20
 HEADERS = {'User-Agent': 'JobRadar/1.0 (public ATS feed; low-frequency personal job discovery)'}
-ROLE = re.compile(r'\b(ux|ui|user experience|user interface|product design(?:er)?|design systems?|visual design(?:er)?|brand(?:ing)?|creative director|art director|design director|design lead|design manager|design strategist|digital strateg(?:y|ist)|innovation strateg(?:y|ist)|content design(?:er)?|experience design(?:er)?|interaction design(?:er)?|ux research(?:er)?|ai product|product manager|marketing design(?:er)?)\b', re.I)
-EXCLUDE = re.compile(r'\b(intern(?:ship)?|trainee(?:ship)?|volunteer|unpaid)\b', re.I)
+ROLE = re.compile(r'\b(ux|ui|user experience|user interface|product design(?:er)?|wordpress|web design(?:er)?|website design(?:er)?|design systems?|visual design(?:er)?|brand(?:ing)? design(?:er)?|creative director|art director|design director|design lead|design manager|design strategist|digital experience design(?:er)?|content design(?:er)?|experience design(?:er)?|interaction design(?:er)?|ux research(?:er)?|marketing design(?:er)?)\b', re.I)
+EXCLUDE = re.compile(r'\b(intern(?:ship)?|trainee(?:ship)?|volunteer|unpaid|early career|new grad|graduate program)\b', re.I)
 
 def is_relevant(title):
     return bool(ROLE.search(title or '')) and not EXCLUDE.search(title or '')
