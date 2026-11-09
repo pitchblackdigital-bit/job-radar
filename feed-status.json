@@ -1,7 +1,7 @@
 {
-  "last_run_utc": "2026-11-09T02:38:44.370537+00:00",
+  "last_run_utc": "2026-11-09T22:17:23.059584+00:00",
   "sources_successful": 3,
-  "jobs": 14,
+  "jobs": 15,
   "warnings": [
     "greenhouse/notion: HTTPError: 404 Client Error: Not Found for url: https://boards-api.greenhouse.io/v1/boards/notion/jobs",
     "lever/netlify: HTTPError: 404 Client Error: Not Found for url: https://api.lever.co/v0/postings/netlify?mode=json"
