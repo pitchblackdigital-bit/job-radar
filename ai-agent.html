@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Job Radar</title>
+<style>
+:root{--bg:#F7F6F0;--card:#fff;--stone:#EDEBE4;--ink:#20211F;--mute:#6b6a64;--line:#e2dfd6;--mar:#682C3E;--wine:#47202D;--rose:#EAD7DC;--sage:#DCE8D9;--sageink:#2f5233;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a1819;--card:#252223;--stone:#2f2b2c;--ink:#f1eeea;--mute:#a8a29b;--line:#3a3536;--mar:#c9778f;--wine:#e3a5b6;--rose:#3d2a30;--sage:#273527;--sageink:#b7d6b3;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1a1819;--card:#252223;--stone:#2f2b2c;--ink:#f1eeea;--mute:#a8a29b;--line:#3a3536;--mar:#c9778f;--wine:#e3a5b6;--rose:#3d2a30;--sage:#273527;--sageink:#b7d6b3;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"Helvetica Neue",Arial,sans-serif;padding-bottom:84px}
+main{max-width:640px;margin:0 auto;padding:20px 18px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mar);font-weight:600}
+h1{font:700 34px/1.05 Georgia,"Times New Roman",serif;margin:8px 0 6px;letter-spacing:-.02em}
+h2{font:700 20px Georgia,serif;margin:22px 0 10px}
+p.sub{color:var(--mute);margin:0 0 16px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat{border-radius:18px;padding:14px;background:var(--card);border:1px solid var(--line)}
+.stat b{display:block;font-size:30px;line-height:1.1}.stat span{font-size:13px;color:var(--mute)}
+.stat.s1{background:var(--rose)}.stat.s2{background:var(--sage)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}
+input,textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:4px 0 10px}
+textarea{min-height:110px;resize:vertical}
+label{font-size:13px;color:var(--mute)}
+button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:11px 18px;background:var(--mar);color:#fff;cursor:pointer}
+button.sec{background:var(--rose);color:var(--wine)}button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+button:disabled{opacity:.5}
+.pill{font-size:12px;border-radius:999px;padding:3px 10px;background:var(--stone);color:var(--mute)}
+.fit{background:var(--sage);color:var(--sageink);font-weight:600}.fit.low{background:var(--rose);color:var(--wine)}
+.small{font-size:14px;color:var(--mute)}ul{margin:6px 0;padding-left:20px}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600;color:var(--wine)}
+pre{white-space:pre-wrap;font:inherit;background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--line)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px))}
+nav button{background:none;color:var(--mute);padding:6px 10px;font-size:13px;border-radius:12px}nav button.on{color:var(--mar)}
+.note{font-size:13px;color:var(--mute);border-left:3px solid var(--mar);padding-left:10px;margin:14px 0}
+.hide{display:none}
+</style></head><body><main>
+<div class="eyebrow"><a href="./index.html" style="color:inherit">← Job Radar dashboard</a> · AI job agent</div>
+<h1 id="h">Good work. Worth finding.</h1>
+<div class="stats" id="stats"></div>
+<section id="v-review"></section>
+<section id="v-add" class="hide"></section>
+<section id="v-track" class="hide"></section>
+<section id="v-setup" class="hide"></section>
+<p class="note">Development prototype integrated with Job Radar. AI evaluation requires a configured secure backend; job discovery and application submission are not automated here. Approval does not submit an application.</p>
+</main>
+<nav id="nav"></nav>
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={resume:'',prefs:'Senior product design, UX/UI or design leadership. Toronto, Canada or remote.',jobs:[]};
+let tab='review',busy=false;
+const TABS=[['review','Review'],['add','Add job'],['track','Tracker'],['setup','Setup']];
+async function init(){try{const stored=localStorage.getItem('job-radar-ai-agent-v1');if(stored)S=Object.assign(S,JSON.parse(stored))}catch(e){}render();}
+async function save(){try{localStorage.setItem('job-radar-ai-agent-v1',JSON.stringify(S))}catch(e){alert('Could not save locally: '+e.message)}}
+function setTab(t){tab=t;render()}
+function cnt(s){return S.jobs.filter(j=>s.includes(j.status)).length}
+function render(){
+  $('#nav').innerHTML=TABS.map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="setTab('${k}')">${l}</button>`).join('');
+  $('#stats').innerHTML=`<div class="stat"><b>${cnt(['new'])}</b><span>Awaiting approval</span></div><div class="stat s2"><b>${cnt(['approved'])}</b><span>Ready to submit</span></div><div class="stat s1"><b>${cnt(['applied'])}</b><span>Applications sent</span></div><div class="stat"><b>${cnt(['interview'])}</b><span>Interviews</span></div>`;
+  for(const [k] of TABS)$('#v-'+k).classList.toggle('hide',tab!==k);
+  ({review:rReview,add:rAdd,track:rTrack,setup:rSetup})[tab]();
+}
+function rSetup(){
+  $('#v-setup').innerHTML=`<h2>Step 1 · Your résumé</h2><p class="sub">Paste your résumé text or load a .txt/.md file. The agent only uses facts found here.</p>
+  <input type="file" id="rf" accept=".txt,.md"><label>Résumé</label><textarea id="rt" placeholder="Paste résumé text">${esc(S.resume)}</textarea>
+  <label>What you’re looking for</label><textarea id="pt">${esc(S.prefs)}</textarea>
+  <label>Secure AI evaluation endpoint (optional)</label><input id="ep" type="url" placeholder="https://your-server.example/api/evaluate" value="${esc(S.endpoint||'')}"><p class="small">The endpoint receives your résumé and job description. Only use a trusted service you control. Never enter an API key into this website.</p><button onclick="saveSetup()">Save</button>`;
+  $('#rf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('#rt').value=r.result};r.readAsText(f)};
+}
+function saveSetup(){S.resume=$('#rt').value;S.prefs=$('#pt').value;S.endpoint=$('#ep').value.trim();if(S.endpoint&&!/^https:\/\//i.test(S.endpoint)){alert('Use an HTTPS endpoint');return}save();tab=S.jobs.length?'review':'add';render()}
+function rAdd(){
+  $('#v-add').innerHTML=`<h2>Add an opportunity</h2><p class="sub">Paste a posting from an alert email or employer page. The agent scores the fit, flags gaps and drafts materials for your approval.</p>
+  <label>Job title</label><input id="jt"><label>Employer</label><input id="jc"><label>Link</label><input id="jl" inputmode="url" placeholder="https://">
+  <label>Job description</label><textarea id="jd" style="min-height:160px"></textarea>
+  <button id="go" onclick="evalJob()" ${busy?'disabled':''}>${busy?'Evaluating…':'Evaluate with AI'}</button>
+  <p class="small" id="err"></p>`;
+}
+async function evalJob(){
+  const t=$('#jt').value.trim(),c=$('#jc').value.trim(),l=$('#jl').value.trim(),d=$('#jd').value.trim();
+  if(!S.resume){$('#err').textContent='Add your résumé in Setup first.';return}
+  if(!d){$('#err').textContent='Paste the job description first.';return}
+  if(!S.endpoint){$('#err').textContent='AI evaluation needs a secure server endpoint. Configure it in Setup; do not paste an API key here.';return}
+  busy=true;$('#go').disabled=true;$('#go').textContent='Evaluating…';
+  const prompt=`You are a careful job-application assistant. Use ONLY facts in the résumé; never invent experience, credentials, employers or numbers.
+RÉSUMÉ:\n${S.resume}\n\nCANDIDATE PREFERENCES:\n${S.prefs}\n\nJOB (${t} at ${c}):\n${d}\n
+Return only JSON: {"fit":0-100,"verdict":"one sentence","reasons":["..."],"gaps":["..."],"flags":["location, seniority, salary, work authorization or closing-date concerns; empty if none"],"tailoredSummary":"3 sentence résumé summary tailored truthfully","coverLetter":"under 220 words, honest, specific","answers":[{"q":"likely application question","a":"draft answer from résumé only"}]}`;
+  try{const response=await fetch(S.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});if(!response.ok)throw Error('AI service returned '+response.status);const payload=await response.json();const r=payload.result||payload;if(typeof r.fit!=='number'||!r.verdict)throw Error('Invalid evaluation response');
+    S.jobs.unshift({id:Date.now().toString(36),title:t||'Untitled role',company:c,link:l,status:'new',date:new Date().toISOString().slice(0,10),fit:r.fit,verdict:r.verdict,reasons:r.reasons||[],gaps:r.gaps||[],flags:r.flags||[],summary:r.tailoredSummary,letter:r.coverLetter,answers:r.answers||[]});
+    await save();busy=false;tab='review';render();
+  }catch(e){busy=false;rAdd();$('#err').textContent='Evaluation failed ('+(e&&e.code||'error')+'). Try again.'}
+}
+function jobCard(j,actions){
+  const li=a=>a&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';
+  return `<div class="card"><div class="row sp"><b style="font-size:18px">${esc(j.title)}</b><span class="pill fit ${j.fit<60?'low':''}">${Number.isFinite(j.fit)?esc(j.fit)+'% fit':'Not evaluated'}</span></div>
+  <div class="small">${esc(j.company)} · added ${esc(j.date)}${j.link?` · <a href="${esc(j.link)}" target="_blank" rel="noopener" style="color:var(--mar)">posting</a>`:''}</div>
+  <p>${esc(j.verdict)}</p>
+  <details><summary>Why it fits &amp; gaps</summary>${li(j.reasons)}<b class="small">Gaps</b>${li(j.gaps)}${(j.flags||[]).length?`<b class="small">Check before applying</b>${li(j.flags)}`:''}</details>
+  <details><summary>Exact materials to be used</summary><b class="small">Tailored summary</b><pre>${esc(j.summary)}</pre><b class="small">Cover letter</b><pre>${esc(j.letter)}</pre>${j.answers.map(a=>`<b class="small">${esc(a.q)}</b><pre>${esc(a.a)}</pre>`).join('')}</details>
+  <div class="row">${actions}</div></div>`;
+}
+function rReview(){
+  const q=S.jobs.filter(j=>j.status==='new'),r=S.jobs.filter(j=>j.status==='approved');
+  let h='';
+  if(!S.jobs.length)h=`<p class="sub">Your agent has nothing to review yet. Add your résumé, then add a posting to see it evaluated.</p><button onclick="setTab('${S.resume?'add':'setup'}')">${S.resume?'Add a job':'Add résumé'}</button>`;
+  if(q.length)h+=`<h2>Awaiting your approval</h2>`+q.map(j=>jobCard(j,`<button onclick="mv('${j.id}','approved')">Approve ✓</button><button class="ghost" onclick="mv('${j.id}','skipped')">Skip</button>`)).join('');
+  if(r.length)h+=`<h2>Approved · ready to submit</h2>`+r.map(j=>jobCard(j,`${j.link?`<a href="${esc(j.link)}" target="_blank" rel="noopener"><button>Open application ↗</button></a>`:''}<button class="sec" onclick="mv('${j.id}','applied')">I submitted it</button>`)).join('')+`<p class="small">Submission is a manual step in this prototype: copy the approved materials above into the employer’s form, then mark it sent.</p>`;
+  $('#v-review').innerHTML=h;
+}
+function mv(id,s){const j=S.jobs.find(x=>x.id===id);if(!j)return;j.status=s;save();render()}
+function rTrack(){
+  const st=['applied','interview','offer','rejected','skipped'];
+  const L={applied:'Applied',interview:'Interview',offer:'Offer',rejected:'Rejected',skipped:'Skipped'};
+  const js=S.jobs.filter(j=>st.includes(j.status));
+  $('#v-track').innerHTML=`<h2>Tracker</h2>`+(js.length?js.map(j=>`<div class="card"><b>${esc(j.title)}</b><div class="small">${esc(j.company)} · ${esc(j.date)}</div>
+  <div class="row" style="margin-top:8px"><select style="width:auto;margin:0" onchange="mv('${j.id}',this.value)">${st.map(s=>`<option value="${s}" ${j.status===s?'selected':''}>${L[s]}</option>`).join('')}</select></div>
+  <label>Notes &amp; follow-up</label><input value="${esc(j.notes||'')}" placeholder="e.g. follow up Friday" onchange="note('${j.id}',this.value)"></div>`).join(''):'<p class="sub">Applications you mark as submitted appear here.</p>');
+}
+function note(id,v){S.jobs.find(x=>x.id===id).notes=v;save()}
+function importDashboardJobs(){let source=[];try{source=JSON.parse(localStorage.getItem('job-radar-v1')||'[]')}catch(e){}if(!Array.isArray(source))return;let n=0;for(const j of source){if(!j.title||!j.url||S.jobs.some(x=>x.link===j.url))continue;S.jobs.push({id:'dashboard-'+String(j.id||Date.now()+n),title:j.title,company:j.company||'',link:j.url,status:'new',date:new Date().toISOString().slice(0,10),fit:null,verdict:'Imported from Job Radar. Not yet evaluated by AI.',reasons:[],gaps:[],flags:['Confirm this posting is active and eligible before applying'],summary:'',letter:'',answers:[]});n++}if(n){save();render()}alert(n+' new opportunities imported from this browser. They have not been AI evaluated.')}
+const importButton=document.createElement('button');importButton.className='sec';importButton.textContent='Import jobs from dashboard';importButton.onclick=importDashboardJobs;document.querySelector('main').insertBefore(importButton,document.querySelector('#v-review'));
+init();
+</script></body></html>

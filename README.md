@@ -1,29 +1,25 @@
-# Job Radar — free GitHub Pages edition
+# Job Radar
 
-Standalone personal job dashboard. Not connected to VEEBIO or SHOBA.
+Standalone public job discovery and browser-local application tracker. This project is separate from all other products.
 
-## Deploy
+## Live website and development
 
-1. Create a **public** GitHub repository named `job-radar`. Do not upload private records or secrets. GitHub Pages on GitHub Free supports public repositories.
-2. Upload the contents of this ZIP to the repository root, including the `.github/workflows/` directory. **Do not upload the ZIP as a single file**.
-3. Commit files to `main`.
-4. In repository Settings → Pages → Build and deployment, choose **GitHub Actions** as Source.
-5. In Actions, open **Publish Job Radar website**, then click **Run workflow** if a run has not already started.
-6. After the run succeeds, use the published Pages URL shown in the job or Settings → Pages. Expected pattern: `https://<username>.github.io/job-radar/` (confirm actual URL).
-7. On iPhone, open the live URL in Safari; use Share → Add to Home Screen if desired.
+- Live public GitHub Pages: https://pitchblackdigital-bit.github.io/job-radar/
+- In-progress Canada-first work: branch `feature/canada-first-ai-apply`, draft PR #1. This branch is **not** the live site and is not an approved preview.
+- Do not merge until the updated collector, location filters, accessibility, and mobile flows are tested.
 
-## Privacy
+## Public collection
 
-Application status and manually entered job details are saved only in this browser using localStorage. They are not uploaded to GitHub. Do not upload your resume, screenshots, private applications, passwords, or browser exports to the public repository. Use **Export CSV** regularly as a backup; CSV can contain sensitive application data.
+`collector.py` retrieves employer-published Greenhouse and Lever job feeds listed in `sources.json`. The GitHub Actions collector is scheduled; check Actions history and `feed-status.json` to confirm actual successful refreshes. The collector filters design-related titles, excludes internships, and requires a Canadian location signal. A Canadian location mention is **not** verification of legal work eligibility or that a vacancy remains open. Failed feeds are reported; the old feed may be retained if no sources succeed.
 
-## Instagram
+The committed `jobs.json` can contain old US-based and starter records until a successful refresh replaces it. Do not present those as verified current Canadian opportunities. Check employer job links before publishing or applying.
 
-Paste an Instagram post URL or employer application link into Sources & imports, optionally select a screenshot to preview, and manually confirm job title, employer, location, and deadline. Screenshot OCR and automatic Instagram channel reading are NOT supported. Screenshot is not uploaded or retained.
+## Job-alert email discovery (proposed, not deployed)
 
-## Public source collection
+Job alerts received by a user can help **discover** potential listings. Never commit mailbox messages, Gmail IDs, personalized click-through/tracking URLs, unsubscribe links, resume details, or private data into this public repository. Extract only candidate job title, employer, location, role type, salary when stated, and the alert date into a **private review queue**. Resolve to a canonical public employer or ATS listing; confirm the vacancy is still open, location/remote eligibility is explicit, and role is relevant. Deduplicate by canonical listing URL and employer/job ID. Only approved verified public listings should be eligible for the public job feed, with source and last-checked date. Unverifiable listings stay private and unpublished.
 
-The collector is **manual-only** initially. Before running it, check source robots.txt, site terms, and permission for automated collection. The source was not accessible from the preparation environment, so permission and parser accuracy are unverified. Once approved, use Actions → Collect public job listings → Run workflow. If it succeeds and commits new jobs.json, the Pages publishing workflow republishes the website. The collector may require adjustment if site markup changes. Do not turn on scheduled scraping before validation.
+There is **no** deployed Gmail-to-website sync or secure mailbox backend. The connected inbox used during planning is not available to public visitors and must not be accessed from client-side JavaScript. A future automated import requires user consent, restricted OAuth permissions, server-side secrets, and a secure private processing environment.
 
-## Limitations
+## Privacy and current limitations
 
-Starter listings are not verified active opportunities. Application eligibility and deadlines must be checked with employers. No login or cross-device synchronization, email notifications, OCR, or guaranteed daily collection. This is a public website, not a private dashboard; only local browser data is private to your device.
+The public GitHub Pages site has no account registration, private cloud resume storage, cross-device sync, working AI assistant, or automatic AI application submission. Browser-local saved information is device-specific. Do not commit personal data, credentials, API keys, or private application records. Any future AI Apply workflow must require review and explicit user authorization before submitting applications.
