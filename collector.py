@@ -13,8 +13,14 @@ OUTPUT = ROOT / 'jobs.json'
 CONFIG = ROOT / 'sources.json'
 TIMEOUT = 20
 HEADERS = {'User-Agent': 'JobRadar/1.0 (public ATS feed; low-frequency personal job discovery)'}
-ROLE = re.compile(r'\b(ux|ui|user experience|user interface|product design(?:er)?|design systems?|visual design(?:er)?|brand(?:ing)?|creative director|art director|design director|design lead|design manager|design strategist|digital strateg(?:y|ist)|innovation strateg(?:y|ist)|content design(?:er)?|experience design(?:er)?|interaction design(?:er)?|ux research(?:er)?|ai product|product manager|marketing design(?:er)?)\b', re.I)
-EXCLUDE = re.compile(r'\b(intern(?:ship)?|trainee(?:ship)?|volunteer|unpaid)\b', re.I)
+ROLE = re.compile(r'\b(ux|ui|user experience|user interface|product design(?:er)?|wordpress|web design(?:er)?|website design(?:er)?|design systems?|visual design(?:er)?|brand(?:ing)? design(?:er)?|creative director|art director|design director|design lead|design manager|design strategist|digital experience design(?:er)?|content design(?:er)?|experience design(?:er)?|interaction design(?:er)?|ux research(?:er)?|marketing design(?:er)?)\b', re.I)
+EXCLUDE = re.compile(r'\b(intern(?:ship)?|trainee(?:ship)?|volunteer|unpaid|early career|new grad|graduate program)\b', re.I)
+
+CANADA = re.compile(r'\b(?:canada|canadian|toronto|ontario|ottawa|montreal|montréal|quebec|québec|vancouver|british columbia|calgary|edmonton|alberta|winnipeg|manitoba|halifax|nova scotia|new brunswick|saskatchewan|newfoundland|prince edward island|victoria|waterloo|kitchener|mississauga|brampton|scarborough|north york|markham|richmond hill|oakville|burlington|hamilton|london,? on|remote,? ca|remote - canada)\b', re.I)
+
+def canada_eligible(location):
+    """Conservative geographic signal, not proof of work authorization."""
+    return bool(CANADA.search(location or ''))
 
 def is_relevant(title):
     return bool(ROLE.search(title or '')) and not EXCLUDE.search(title or '')
@@ -23,12 +29,12 @@ def identity(url):
     return hashlib.sha256(url.encode('utf-8')).hexdigest()[:20]
 
 def normalize(title, company, location, url, source, kind='Job'):
-    if not url.startswith('https://') or not is_relevant(title):
+    if not url.startswith('https://') or not is_relevant(title) or not canada_eligible(location):
         return None
     return {'id': identity(url), 'title': title.strip(), 'company': company.strip(),
             'location': (location or 'Location not stated').strip(), 'url': url,
             'type': kind, 'source': source, 'deadline': 'Not provided',
-            'verification': 'Public ATS listing; location eligibility not independently verified',
+            'verification': 'Public ATS listing; Canadian location indicated, work eligibility not independently verified',
             'last_seen': dt.datetime.now(dt.timezone.utc).date().isoformat()}
 
 def greenhouse(session, board):
@@ -50,7 +56,7 @@ def lever(session, company):
 def main():
     cfg = json.loads(CONFIG.read_text(encoding='utf-8'))
     old = json.loads(OUTPUT.read_text(encoding='utf-8')) if OUTPUT.exists() else []
-    old_by_url = {j['url']: j for j in old if j.get('url') and j.get('source', '').startswith(('Greenhouse', 'Lever'))}
+    old_by_url = {j['url']: j for j in old if j.get('url') and j.get('source', '').startswith(('Greenhouse', 'Lever')) and is_relevant(j.get('title')) and canada_eligible(j.get('location'))}
     session = requests.Session()
     session.headers.update(HEADERS)
     fetched = {}
@@ -82,7 +88,7 @@ def main():
     OUTPUT.write_text(json.dumps(fresh, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     (ROOT / 'feed-status.json').write_text(json.dumps({
         'last_run_utc': dt.datetime.now(dt.timezone.utc).isoformat(),
-        'sources_successful': successes, 'jobs': len(fresh), 'warnings': failures
+        'sources_successful': successes, 'jobs': len(fresh), 'warnings': failures, 'geography': 'Canada-first; Canadian location indicated, eligibility unverified'
     }, indent=2) + '\n', encoding='utf-8')
     print(f'Collected {len(fresh)} relevant roles from {successes} public ATS feeds.')
     if failures:
